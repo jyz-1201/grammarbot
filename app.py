@@ -34,12 +34,12 @@ class GrammarCheck(Resource):
                 'Missing preposition']
         num_dict = {}
         error_list = []
-        error_dict = {}
+
         matches = json.loads(html)['matches']
         for i in range(len(matches)):
             if matches[i]["shortMessage"] != '':
                 str = matches[i]["shortMessage"]
-                error_dict.clear()
+                error_dict = {}
                 error_dict["errorSentence"] = matches[i]["sentence"]
                 error_dict["errorType"] = str
                 error_dict["errorAdvice"] = matches[i]["message"]
