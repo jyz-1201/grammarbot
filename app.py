@@ -21,10 +21,7 @@ class GrammarCheck(Resource):
         url = 'https://languagetool.org/api/v2/check?language=en-US&text='
         example = 'check?language=en-US&text=my+text'
 
-        print(request.content_type)
-        print(request.form['data'])
-        
-        new_data = request.form['data'].replace(' ', '+')
+        new_data = request.headers.get("data").replace(' ', '+')
 
         url = url + new_data
 
@@ -62,4 +59,4 @@ api.add_resource(GrammarCheck, '/grammarCheck')
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
