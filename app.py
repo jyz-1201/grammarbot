@@ -52,7 +52,11 @@ class GrammarCheck(Resource):
                     num_dict[str] = 1 + num_dict[str]
                 else:
                     num_dict[str] = 1
-        return {"most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
+        if not bool(num_dict):
+            return {"correct": True}
+        else:
+            return {"correct": False, "most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
+
 
 
 api.add_resource(GrammarCheck, '/grammarCheck')
