@@ -3,9 +3,17 @@ import urllib.parse
 import json
 from requests import put, get
 
+
 from flask import Flask, request
 from flask_restful import Resource, Api
 
+
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk import PorterStemmer
+
+from nltk.stem.wordnet import WordNetLemmatizer
 
 nltk.download('stopwords')
 nltk.download('punkt')
