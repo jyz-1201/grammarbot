@@ -56,10 +56,39 @@ class GrammarCheck(Resource):
             return {"correct": True}
         else:
             return {"correct": False, "most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
+        
+        
+class StringCheck(Resource):
+    def get(self):
+        userData = request.form['userData']
+        groundTruth = request.form['groundTruth']
+
+        lem = WordNetLemmatizer()
+
+        stop_words = set(stopwords.words('english'))
+        word_tokens = word_tokenize(userData)
+        print(word_tokens)
+        keywordUser = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
+        print(keywordUser)
+        stop_words = set(stopwords.words('english'))
+        word_tokens = word_tokenize(groundTruth)
+        print(word_tokens)
+        keywordGround = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
+        print(keywordGround)
+        for i in range(min(len(keywordUser), len(keywordGround))):
+            if keywordUser[i] != keywordGround[i]:
+                print("Wrong index " + str(i))
+                return {"Message": "Wrong Word", "WrongWord": keywordUser[i], "GroundTruth": keywordGround[i]}
+        if len(keywordUser) != len(keywordGround):
+            print("Miss or More keywords")
+            return {"Message": "Missing or Extra Keywords"}
+        print("Correct")
+        return {"Message": "Correct"}
 
 
 
 api.add_resource(GrammarCheck, '/grammarCheck')
+api.add_resource(StringCheck, '/stringCheck')
 
 
 if __name__ == "__main__":
