@@ -6,6 +6,13 @@ from requests import put, get
 from flask import Flask, request
 from flask_restful import Resource, Api
 
+
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+
+
 app = Flask(__name__)
 api = Api(app)
 
