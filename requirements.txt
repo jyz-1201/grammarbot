@@ -1,3 +1,7 @@
 Flask==2.0.3
 Flask_RESTful==0.3.9
 requests==2.27.1
+
+nltk~=3.7
+punctuator~=0.9.6
+urllib3~=1.26.9
