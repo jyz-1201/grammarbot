@@ -1,12 +1,11 @@
+import re
 import urllib.request
 import urllib.parse
 import json
-from requests import put, get
 
-
+import urllib3
 from flask import Flask, request
 from flask_restful import Resource, Api
-
 
 import nltk
 from nltk.tokenize import word_tokenize
@@ -20,28 +19,67 @@ nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 
-
 app = Flask(__name__)
 api = Api(app)
 
+def diff(a: str, b: str):
+    return a != b
+
+
+def get_edit_dist(x: list, y: list):
+    gap_penalty = 0.7
+    mismatch_penalty = 1
+    m = len(x)
+    n = len(y)
+    E = []
+
+    for i in range(0, m + 1):
+        E.append([])
+        for j in range(0, n + 1):
+            E[i].append(0)
+
+    for i in range(0, m + 1):
+        E[i][0] = i * gap_penalty
+    for j in range(1, n + 1):
+        E[0][j] = j * gap_penalty
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            E[i][j] = min(gap_penalty + E[i-1][j], gap_penalty + E[i][j-1],
+                          diff(x[i - 1], y[j - 1]) * mismatch_penalty + E[i-1][j-1])
+
+    return E[m][n]
+
+
+def get_alignment(long_text: str, short_text: str):
+    x_wordlevel = long_text.split(" ")
+    y_wordlevel = short_text.split(" ")
+    res = 1e9
+    min_i = min_j = -1
+    for i in range(0, len(x_wordlevel)):
+        for j in range(i + 1, len(x_wordlevel)):
+            cur = get_edit_dist(x_wordlevel[i:j], y_wordlevel)
+            if res > cur:
+                res = cur
+                min_i = i
+                min_j = j
+    return res, min_i, min_j, x_wordlevel[min_i:min_j+1]
+
 
 class GrammarCheck(Resource):
-    # def get(self):
-    #     return {'hello': request.form['username']}
-    # def put(self):
-    #     return {"put_hello": request.form['username']}
-    # def post(self):
-    #     return {"posted_hello": "res"}
     def get(self):
+        data = request.form['data']
+        http = urllib3.PoolManager()
+        r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
+        print(r.data)
+        data = r.data.decode()
+
         url = 'https://languagetool.org/api/v2/check?language=en-US&text='
         example = 'check?language=en-US&text=my+text'
 
-        new_data = request.headers.get("data").replace(' ', '+')
-
+        new_data = data.replace(' ', '+')
         url = url + new_data
-
         rst = urllib.request.Request(url)
-
         html = urllib.request.urlopen(rst).read().decode('utf-8')
 
         list = ['Wrong article', 'Missing preposition', 'Agreement error', 'Possible grammar error',
@@ -49,10 +87,10 @@ class GrammarCheck(Resource):
                 'Missing preposition']
         num_dict = {}
         error_list = []
-
         matches = json.loads(html)['matches']
         for i in range(len(matches)):
             if matches[i]["shortMessage"] != '':
+                print(matches[i])
                 str = matches[i]["shortMessage"]
                 error_dict = {}
                 error_dict["errorSentence"] = matches[i]["sentence"]
@@ -67,18 +105,23 @@ class GrammarCheck(Resource):
                     num_dict[str] = 1 + num_dict[str]
                 else:
                     num_dict[str] = 1
+        # return {"most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
         if not bool(num_dict):
             return {"correct": True}
         else:
             return {"correct": False, "most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
-        
-        
+
+
 class StringCheck(Resource):
     def get(self):
         userData = request.form['userData']
         groundTruth = request.form['groundTruth']
 
         lem = WordNetLemmatizer()
+        string4 = re.sub('\W', ' ', groundTruth)  # 把非单词字符全部替换为空，恰好与\w相反
+
+        res, min_i, min_j, longLine = get_alignment(string4, userData)
+        st = str(' '.join([str(s) for s in longLine]))
 
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(userData)
@@ -86,20 +129,20 @@ class StringCheck(Resource):
         keywordUser = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
         print(keywordUser)
         stop_words = set(stopwords.words('english'))
-        word_tokens = word_tokenize(groundTruth)
+        word_tokens = word_tokenize(st)
         print(word_tokens)
         keywordGround = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
         print(keywordGround)
+
         for i in range(min(len(keywordUser), len(keywordGround))):
             if keywordUser[i] != keywordGround[i]:
                 print("Wrong index " + str(i))
-                return {"Message": "Wrong Word", "WrongWord": keywordUser[i], "GroundTruth": keywordGround[i]}
+                return "Wrong index ", i
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
-            return {"Message": "Missing or Extra Keywords"}
+            return "Miss or More keywords"
         print("Correct")
-        return {"Message": "Correct"}
-
+        return "Correct"
 
 
 api.add_resource(GrammarCheck, '/grammarCheck')
@@ -107,4 +150,4 @@ api.add_resource(StringCheck, '/stringCheck')
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True, host='0.0.0.0', port=5000)
