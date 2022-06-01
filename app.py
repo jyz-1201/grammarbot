@@ -68,7 +68,8 @@ def get_alignment(long_text: str, short_text: str):
 
 class GrammarCheck(Resource):
     def get(self):
-        data = request.form['data']
+        data = request.headers.get("data")
+        # data = request.form['data']
         http = urllib3.PoolManager()
         r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
         print(r.data)
