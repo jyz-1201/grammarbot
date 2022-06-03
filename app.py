@@ -138,12 +138,12 @@ class StringCheck(Resource):
         for i in range(min(len(keywordUser), len(keywordGround))):
             if keywordUser[i] != keywordGround[i]:
                 print("Wrong index " + str(i))
-                return "Wrong index ", i
+                return {"status": "WI", "wrong index": i}
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
-            return "Miss or More keywords"
+            return {"status": "MOMK"}
         print("Correct")
-        return "Correct"
+        return {"status": "C"}
 
 
 api.add_resource(GrammarCheck, '/grammarCheck')
