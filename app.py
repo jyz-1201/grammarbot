@@ -115,17 +115,21 @@ class GrammarCheck(Resource):
 
 class StringCheck(Resource):
     def get(self):
-        userData = request.form['userData']
-        groundTruth = request.form['groundTruth']
+        userData = request.headers.get("userData")
+        groundTruth = request.headers.get("groundTruth")
+
+#        userData = request.form['userData']
+#        groundTruth = request.form['groundTruth']
 
         lem = WordNetLemmatizer()
         string4 = re.sub('\W', ' ', groundTruth)  # 把非单词字符全部替换为空，恰好与\w相反
+        ud = re.sub('\W', ' ', userData)  # 把非单词字符全部替换为空，恰好与\w相反
 
-        res, min_i, min_j, longLine = get_alignment(string4, userData)
+        res, min_i, min_j, longLine = get_alignment(string4, ud)
         st = str(' '.join([str(s) for s in longLine]))
 
         stop_words = set(stopwords.words('english'))
-        word_tokens = word_tokenize(userData)
+        word_tokens = word_tokenize(ud)
         print(word_tokens)
         keywordUser = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
         print(keywordUser)
