@@ -12,15 +12,21 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk import PorterStemmer
 
+from nltk.corpus import wordnet
+from nltk import word_tokenize, pos_tag
+
+
 from nltk.stem.wordnet import WordNetLemmatizer
 
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
+nltk.download('averaged_perceptron_tagger')
 
 app = Flask(__name__)
 api = Api(app)
+
 
 def diff(a: str, b: str):
     return a != b
@@ -66,10 +72,32 @@ def get_alignment(long_text: str, short_text: str):
     return res, min_i, min_j, len(x_wordlevel), x_wordlevel[min_i:min_j]
 
 
+def get_wordnet_pos(treebank_tag):
+    if treebank_tag.startswith('J'):
+        return wordnet.ADJ
+    elif treebank_tag.startswith('V'):
+        return wordnet.VERB
+    elif treebank_tag.startswith('N'):
+        return wordnet.NOUN
+    elif treebank_tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return None
+
+
+def lemmatize_sentence(sentence):
+    res = []
+    lemmatizer = WordNetLemmatizer()
+    for word, pos in pos_tag(word_tokenize(sentence)):
+        wordnet_pos = get_wordnet_pos(pos) or wordnet.NOUN
+        res.append(lemmatizer.lemmatize(word, pos=wordnet_pos))
+    return res
+
+
 class GrammarCheck(Resource):
     def get(self):
+#       data = request.form['data']
         data = request.headers.get("data")
-        # data = request.form['data']
         http = urllib3.PoolManager()
         r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
         print(r.data)
@@ -120,16 +148,16 @@ class StringCheck(Resource):
 
 #        userData = request.form['userData']
 #        groundTruth = request.form['groundTruth']
-
         lem = WordNetLemmatizer()
         string4 = re.sub('\W', ' ', groundTruth)  # 把非单词字符全部替换为空，恰好与\w相反
         ud = re.sub('\W', ' ', userData)  # 把非单词字符全部替换为空，恰好与\w相反
 
-        string4 = re.sub('\s+', ' ', string4)  # 删除多余的空格
-        ud = re.sub('\s+', ' ', ud)  # 删除多余的空格
+        string4 = lemmatize_sentence(string4)
+        string4 = str(' '.join([str(s) for s in string4]))
 
-        string4 = lem.lemmatize(string4)
-        ud = lem.lemmatize(ud)
+        ud = lemmatize_sentence(ud)
+        ud = str(' '.join([str(s) for s in ud]))
+
         res, min_i, min_j, num_wordlevel, longLine = get_alignment(string4, ud)
 
         st = str(' '.join([str(s) for s in longLine]))
@@ -137,12 +165,13 @@ class StringCheck(Resource):
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(ud)
         print(word_tokens)
-        keywordUser = [w for w in word_tokens if not w in stop_words]
+        keywordUser = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
         print(keywordUser)
+
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(st)
         print(word_tokens)
-        keywordGround = [w for w in word_tokens if not w in stop_words]
+        keywordGround = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
         print(keywordGround)
 
         if len(keywordUser) <= 3:
@@ -150,13 +179,13 @@ class StringCheck(Resource):
             return {"status": "TSTC"}
         for i in range(min(len(keywordUser), len(keywordGround))):
             if keywordUser[i] != keywordGround[i]:
-                print("Wrong word" + keywordUser[i])
-                return {"status": "WI", "wrong word": i}
+                print("Wrong word " + keywordUser[i])
+                return {"status": "WI", "correct word": keywordGround[i]}
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
             return {"status": "MOMK"}
-#         print(min_j)
-#         print(num_wordlevel)
+        print(min_j)
+        print(num_wordlevel)
         if min_j >= num_wordlevel - 2:
             print("Almost finish reading")
             return {"status": "F"}
@@ -169,4 +198,4 @@ api.add_resource(StringCheck, '/stringCheck')
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True, host='0.0.0.0', port=5000)
