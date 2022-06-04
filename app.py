@@ -63,7 +63,7 @@ def get_alignment(long_text: str, short_text: str):
                 res = cur
                 min_i = i
                 min_j = j
-    return res, min_i, min_j, x_wordlevel[min_i:min_j+1]
+    return res, min_i, min_j, x_wordlevel[min_i:min_j]
 
 
 class GrammarCheck(Resource):
