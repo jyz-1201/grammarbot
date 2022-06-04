@@ -125,6 +125,9 @@ class StringCheck(Resource):
         string4 = re.sub('\W', ' ', groundTruth)  # 把非单词字符全部替换为空，恰好与\w相反
         ud = re.sub('\W', ' ', userData)  # 把非单词字符全部替换为空，恰好与\w相反
 
+        string4 = re.sub('\s+', ' ', string4)  # 删除多余的空格
+        ud = re.sub('\s+', ' ', ud)  # 删除多余的空格
+
         string4 = lem.lemmatize(string4)
         ud = lem.lemmatize(ud)
         res, min_i, min_j, num_wordlevel, longLine = get_alignment(string4, ud)
