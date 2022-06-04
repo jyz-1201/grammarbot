@@ -151,6 +151,11 @@ class StringCheck(Resource):
         lem = WordNetLemmatizer()
         string4 = re.sub('\W', ' ', groundTruth)  # 把非单词字符全部替换为空，恰好与\w相反
         ud = re.sub('\W', ' ', userData)  # 把非单词字符全部替换为空，恰好与\w相反
+        string4 = re.sub('\s+', ' ', string4)  # 删除多余的空格
+        ud = re.sub('\s+', ' ', ud)  # 删除多余的空格
+
+        userData = userData.split(" ")
+        groundTruth = groundTruth.split(" ")
 
         string4 = lemmatize_sentence(string4)
         string4 = str(' '.join([str(s) for s in string4]))
@@ -165,13 +170,15 @@ class StringCheck(Resource):
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(ud)
         print(word_tokens)
-        keywordUser = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
+        keywordUser = [w for w in word_tokens if not w in stop_words]
+        indexUser = [index for index, w in enumerate(word_tokens) if not w in stop_words]
         print(keywordUser)
 
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(st)
         print(word_tokens)
-        keywordGround = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
+        keywordGround = [w for w in word_tokens if not w in stop_words]
+        indexGround = [index for index, w in enumerate(word_tokens) if not w in stop_words]
         print(keywordGround)
 
         if len(keywordUser) <= 3:
@@ -180,7 +187,7 @@ class StringCheck(Resource):
         for i in range(min(len(keywordUser), len(keywordGround))):
             if keywordUser[i] != keywordGround[i]:
                 print("Wrong word " + keywordUser[i])
-                return {"status": "WI", "correct word": keywordGround[i]}
+                return {"status": "WI", "wrong word": userData[indexUser[i]], "correct word": groundTruth[indexGround[i]], "correct index": indexGround[i]}
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
             return {"status": "MOMK"}
