@@ -152,8 +152,8 @@ class StringCheck(Resource):
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
             return {"status": "MOMK"}
-        print(min_j)
-        print(num_wordlevel)
+#         print(min_j)
+#         print(num_wordlevel)
         if min_j >= num_wordlevel - 2:
             print("Almost finish reading")
             return {"status": "F"}
