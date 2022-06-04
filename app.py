@@ -63,7 +63,7 @@ def get_alignment(long_text: str, short_text: str):
                 res = cur
                 min_i = i
                 min_j = j
-    return res, min_i, min_j, x_wordlevel[min_i:min_j]
+    return res, min_i, min_j, len(x_wordlevel), x_wordlevel[min_i:min_j]
 
 
 class GrammarCheck(Resource):
@@ -125,27 +125,38 @@ class StringCheck(Resource):
         string4 = re.sub('\W', ' ', groundTruth)  # 把非单词字符全部替换为空，恰好与\w相反
         ud = re.sub('\W', ' ', userData)  # 把非单词字符全部替换为空，恰好与\w相反
 
-        res, min_i, min_j, longLine = get_alignment(string4, ud)
+        string4 = lem.lemmatize(string4)
+        ud = lem.lemmatize(ud)
+        res, min_i, min_j, num_wordlevel, longLine = get_alignment(string4, ud)
+
         st = str(' '.join([str(s) for s in longLine]))
 
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(ud)
         print(word_tokens)
-        keywordUser = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
+        keywordUser = [w for w in word_tokens if not w in stop_words]
         print(keywordUser)
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(st)
         print(word_tokens)
-        keywordGround = [lem.lemmatize(w) for w in word_tokens if not w in stop_words]
+        keywordGround = [w for w in word_tokens if not w in stop_words]
         print(keywordGround)
 
+        if len(keywordUser) <= 3:
+            print("too short to calculate")
+            return {"status": "TSTC"}
         for i in range(min(len(keywordUser), len(keywordGround))):
             if keywordUser[i] != keywordGround[i]:
-                print("Wrong index " + str(i))
-                return {"status": "WI", "wrong index": i}
+                print("Wrong word" + keywordUser[i])
+                return {"status": "WI", "wrong word": i}
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
             return {"status": "MOMK"}
+        print(min_j)
+        print(num_wordlevel)
+        if min_j >= num_wordlevel - 2:
+            print("Almost finish reading")
+            return {"status": "F"}
         print("Correct")
         return {"status": "C"}
 
