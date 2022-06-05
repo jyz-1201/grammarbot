@@ -94,14 +94,14 @@ def lemmatize_sentence(sentence):
     return res
 
 
-class GrammarCheck(Resource):
+ class GrammarCheck(Resource):
     def get(self):
 #       data = request.form['data']
         data = request.headers.get("data")
-        http = urllib3.PoolManager()
-        r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
-        print(r.data)
-        data = r.data.decode()
+        # http = urllib3.PoolManager()
+        # r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
+        # print(r.data)
+        # data = r.data.decode()
 
         url = 'https://languagetool.org/api/v2/check?language=en-US&text='
         example = 'check?language=en-US&text=my+text'
@@ -118,6 +118,8 @@ class GrammarCheck(Resource):
         error_list = []
         matches = json.loads(html)['matches']
         for i in range(len(matches)):
+            if matches[i]["shortMessage"] == 'Missing comma':
+                continue
             if matches[i]["shortMessage"] != '':
                 print(matches[i])
                 str = matches[i]["shortMessage"]
