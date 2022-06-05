@@ -94,7 +94,7 @@ def lemmatize_sentence(sentence):
     return res
 
 
- class GrammarCheck(Resource):
+class GrammarCheck(Resource):
     def get(self):
 #       data = request.form['data']
         data = request.headers.get("data")
