@@ -3,14 +3,13 @@ import urllib.request
 import urllib.parse
 import json
 
-import urllib3
+import paralleldots
+
 from flask import Flask, request
 from flask_restful import Resource, Api
 
 import nltk
-from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-from nltk import PorterStemmer
 
 from nltk.corpus import wordnet
 from nltk import word_tokenize, pos_tag
@@ -202,8 +201,54 @@ class StringCheck(Resource):
         return {"status": "C"}
 
 
+class MeaningCheck(Resource):
+    def get(self):
+        userData = request.headers.get("userData")
+        groundTruth = request.headers.get("groundTruth")
+
+        paralleldots.set_api_key("WHdM81fnBed9S6mbvKrBcvgG2CxBPCnhychHXIRgbvE")
+        response = paralleldots.similarity(userData, groundTruth)
+        # print(response)
+        if response['similarity_score'] > 0.6:
+            print({"status": "C"})
+            return {"status": "C", "similarity": str(response['similarity_score'])}
+        print({"status": "P", "similarity": str(response['similarity_score'])})
+        return {"status": "P", "similarity": str(response['similarity_score'])}
+
+
+class KeywordCheck(Resource):
+    def get(self):
+        userData = request.headers.get("userData")
+        groundTruth = request.headers.get("groundTruth")
+
+        paralleldots.set_api_key("WHdM81fnBed9S6mbvKrBcvgG2CxBPCnhychHXIRgbvE")
+        text = [userData, groundTruth]
+        response = paralleldots.batch_keywords(text)
+        print(response)
+        keywordListUser = response['keywords'][0]
+        keywordListGround = response['keywords'][1]
+        keywordUser = []
+        keywordGround = []
+
+        for i in range(len(keywordListUser)):
+            if keywordListUser[i]['confidence_score'] > 0.8:
+                keywordUser.append(keywordListUser[i]['keyword'])
+        for i in range(len(keywordListGround)):
+            if keywordListGround[i]['confidence_score'] > 0.8:
+                keywordGround.append(keywordListGround[i]['keyword'])
+        for i in range(len(keywordGround)):
+            print(keywordGround)
+            if keywordGround[i] not in keywordUser:
+                print({"status": "MK", "missing keyword": keywordGround[i]})
+                return {"status": "MK", "missing keyword": keywordGround[i]}
+        print({"status": "C"})
+        return {"status": "C"}
+
+
 api.add_resource(GrammarCheck, '/grammarCheck')
 api.add_resource(StringCheck, '/stringCheck')
+api.add_resource(MeaningCheck, '/meaningCheck')
+api.add_resource(KeywordCheck, '/keywordCheck')
 
 
 if __name__ == "__main__":
