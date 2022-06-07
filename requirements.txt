@@ -5,3 +5,4 @@ requests==2.27.1
 nltk~=3.7
 punctuator~=0.9.6
 urllib3~=1.26.9
+paralleldots~=3.2.14
