@@ -174,9 +174,9 @@ class StringCheck(Resource):
 
         res, min_i, min_j, num_wordlevel, longLine, min_u, min_v, y_wordlevel = get_alignment(string4, ud)
 
-
+        print("JYZZZ:")
+        print(y_wordlevel)
         st = str(' '.join([str(s) for s in longLine]))
-        ud = str(' '.join([str(s) for s in y_wordlevel]))
 
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(ud)
