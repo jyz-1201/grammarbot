@@ -57,18 +57,26 @@ def get_edit_dist(x: list, y: list):
 
 
 def get_alignment(long_text: str, short_text: str):
+    shortened_penalty = 0.6
+
     x_wordlevel = long_text.split(" ")
     y_wordlevel = short_text.split(" ")
     res = 1e9
     min_i = min_j = -1
-    for i in range(0, len(x_wordlevel)):
-        for j in range(i + 1, len(x_wordlevel)):
-            cur = get_edit_dist(x_wordlevel[i:j], y_wordlevel)
-            if res > cur:
-                res = cur
-                min_i = i
-                min_j = j
-    return res, min_i, min_j, len(x_wordlevel), x_wordlevel[min_i:min_j]
+    min_u = min_v = -1
+    for u in range(0, len(y_wordlevel)):
+        for v in range(u + 1, len(y_wordlevel)):
+            for i in range(0, len(x_wordlevel)):
+                for j in range(i + 1, len(x_wordlevel)):
+                    cur = get_edit_dist(x_wordlevel[i:j], y_wordlevel[u:v]) + \
+                          shortened_penalty * (len(y_wordlevel) - len(y_wordlevel[u:v]))
+                    if res > cur:
+                        res = cur
+                        min_i = i
+                        min_j = j
+                        min_u = u
+                        min_v = v
+    return res, min_i, min_j, len(x_wordlevel), x_wordlevel[min_i:min_j], min_u, min_v, y_wordlevel[min_u:min_v]
 
 
 def get_wordnet_pos(treebank_tag):
@@ -164,8 +172,10 @@ class StringCheck(Resource):
         ud = lemmatize_sentence(ud)
         ud = str(' '.join([str(s) for s in ud]))
 
-        res, min_i, min_j, num_wordlevel, longLine = get_alignment(string4, ud)
+        res, min_i, min_j, num_wordlevel, longLine, min_u, min_v, y_wordlevel = get_alignment(string4, ud)
 
+        print("JYZZZ:")
+        print(y_wordlevel)
         st = str(' '.join([str(s) for s in longLine]))
 
         stop_words = set(stopwords.words('english'))
