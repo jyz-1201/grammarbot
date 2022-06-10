@@ -2,7 +2,7 @@ import re
 import urllib.request
 import urllib.parse
 import json
-
+import urllib3
 import paralleldots
 
 from flask import Flask, request
