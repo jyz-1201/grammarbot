@@ -116,25 +116,46 @@ class GrammarCheck(Resource):
         num_dict = {}
         error_list = []
         matches = json.loads(html)['matches']
-        for i in range(len(matches)):
-            if matches[i]["shortMessage"] == 'Missing comma':
-                continue
-            if matches[i]["shortMessage"] != '':
-                print(matches[i])
-                str = matches[i]["shortMessage"]
-                error_dict = {}
-                error_dict["errorSentence"] = matches[i]["sentence"]
-                error_dict["errorType"] = str
-                error_dict["errorAdvice"] = matches[i]["message"]
-                error_dict["errorOffset"] = matches[i]["offset"]
-                error_dict["errorLength"] = matches[i]["length"]
-                error_dict["errorReplacement"] = matches[i]["replacements"]
+            for i in range(len(matches)):
+        str = ""
+        if matches[i]["shortMessage"] != '':
+            str = matches[i]["shortMessage"]
+        else:
+            str = "Others"
+        print(matches[i])
+        error_dict = {}
+        error_dict["errorSentence"] = matches[i]["sentence"]
+        error_dict["errorType"] = str
+        error_dict["errorAdvice"] = matches[i]["message"]
+        error_dict["errorOffset"] = matches[i]["offset"]
+        error_dict["errorLength"] = matches[i]["length"]
+        error_dict["errorReplacement"] = matches[i]["replacements"]
 
-                error_list.append(error_dict)
-                if str in num_dict:
-                    num_dict[str] = 1 + num_dict[str]
-                else:
-                    num_dict[str] = 1
+        error_list.append(error_dict)
+
+        if str in num_dict:
+            num_dict[str] = 1 + num_dict[str]
+        else:
+            num_dict[str] = 1
+#         for i in range(len(matches)):
+#             if matches[i]["shortMessage"] == 'Missing comma':
+#                 continue
+#             if matches[i]["shortMessage"] != '':
+#                 print(matches[i])
+#                 str = matches[i]["shortMessage"]
+#                 error_dict = {}
+#                 error_dict["errorSentence"] = matches[i]["sentence"]
+#                 error_dict["errorType"] = str
+#                 error_dict["errorAdvice"] = matches[i]["message"]
+#                 error_dict["errorOffset"] = matches[i]["offset"]
+#                 error_dict["errorLength"] = matches[i]["length"]
+#                 error_dict["errorReplacement"] = matches[i]["replacements"]
+
+#                 error_list.append(error_dict)
+#                 if str in num_dict:
+#                     num_dict[str] = 1 + num_dict[str]
+#                 else:
+#                     num_dict[str] = 1
         # return {"most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
         if not bool(num_dict):
             return {"correct": True}
