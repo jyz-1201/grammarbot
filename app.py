@@ -188,7 +188,7 @@ class StringCheck(Resource):
         for i in range(min(len(keywordUser), len(keywordGround))):
             if keywordUser[i] != keywordGround[i]:
                 print("Wrong word " + keywordUser[i])
-                return {"status": "WI", "wrong word": userData[indexUser[i]], "correct word": groundTruth[indexGround[i]], "correct index": indexGround[i]}
+                return {"status": "WI", "wrongWord": userData[indexUser[i]], "correctWord": groundTruth[indexGround[i]], "correctIndex": indexGround[i]}
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
             return {"status": "MOMK"}
