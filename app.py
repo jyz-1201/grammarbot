@@ -97,10 +97,10 @@ class GrammarCheck(Resource):
     def get(self):
 #       data = request.form['data']
         data = request.headers.get("data")
-        # http = urllib3.PoolManager()
-        # r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
-        # print(r.data)
-        # data = r.data.decode()
+        http = urllib3.PoolManager()
+        r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
+        print(r.data)
+        data = r.data.decode()
 
         url = 'https://languagetool.org/api/v2/check?language=en-US&text='
         example = 'check?language=en-US&text=my+text'
