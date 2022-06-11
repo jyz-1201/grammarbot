@@ -4,6 +4,7 @@ import urllib.parse
 import json
 import numpy as np
 
+import urllib3
 import paralleldots
 
 from flask import Flask, request
@@ -106,10 +107,10 @@ class GrammarCheck(Resource):
     def get(self):
 #       data = request.form['data']
         data = request.headers.get("data")
-        # http = urllib3.PoolManager()
-        # r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
-        # print(r.data)
-        # data = r.data.decode()
+        http = urllib3.PoolManager()
+        r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
+        print(r.data)
+        data = r.data.decode()
 
         url = 'https://languagetool.org/api/v2/check?language=en-US&text='
         example = 'check?language=en-US&text=my+text'
@@ -126,24 +127,45 @@ class GrammarCheck(Resource):
         error_list = []
         matches = json.loads(html)['matches']
         for i in range(len(matches)):
-            if matches[i]["shortMessage"] == 'Missing comma':
-                continue
+            str = ""
             if matches[i]["shortMessage"] != '':
-                print(matches[i])
                 str = matches[i]["shortMessage"]
-                error_dict = {}
-                error_dict["errorSentence"] = matches[i]["sentence"]
-                error_dict["errorType"] = str
-                error_dict["errorAdvice"] = matches[i]["message"]
-                error_dict["errorOffset"] = matches[i]["offset"]
-                error_dict["errorLength"] = matches[i]["length"]
-                error_dict["errorReplacement"] = matches[i]["replacements"]
+            else:
+                str = "Others"
+            print(matches[i])
+            error_dict = {}
+            error_dict["errorSentence"] = matches[i]["sentence"]
+            error_dict["errorType"] = str
+            error_dict["errorAdvice"] = matches[i]["message"]
+            error_dict["errorOffset"] = matches[i]["offset"]
+            error_dict["errorLength"] = matches[i]["length"]
+            error_dict["errorReplacement"] = matches[i]["replacements"]
 
-                error_list.append(error_dict)
-                if str in num_dict:
-                    num_dict[str] = 1 + num_dict[str]
-                else:
-                    num_dict[str] = 1
+            error_list.append(error_dict)
+
+            if str in num_dict:
+                num_dict[str] = 1 + num_dict[str]
+            else:
+                num_dict[str] = 1
+#         for i in range(len(matches)):
+#             if matches[i]["shortMessage"] == 'Missing comma':
+#                 continue
+#             if matches[i]["shortMessage"] != '':
+#                 print(matches[i])
+#                 str = matches[i]["shortMessage"]
+#                 error_dict = {}
+#                 error_dict["errorSentence"] = matches[i]["sentence"]
+#                 error_dict["errorType"] = str
+#                 error_dict["errorAdvice"] = matches[i]["message"]
+#                 error_dict["errorOffset"] = matches[i]["offset"]
+#                 error_dict["errorLength"] = matches[i]["length"]
+#                 error_dict["errorReplacement"] = matches[i]["replacements"]
+
+#                 error_list.append(error_dict)
+#                 if str in num_dict:
+#                     num_dict[str] = 1 + num_dict[str]
+#                 else:
+#                     num_dict[str] = 1
         # return {"most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
         if not bool(num_dict):
             return {"correct": True}
@@ -199,7 +221,7 @@ class StringCheck(Resource):
         for i in range(min(len(keywordUser), len(keywordGround))):
             if keywordUser[i] != keywordGround[i]:
                 print("Wrong word " + keywordUser[i])
-                return {"status": "WI", "wrong word": userData[indexUser[i]], "correct word": groundTruth[indexGround[i]], "correct index": indexGround[i]}
+                return {"status": "WI", "wrongWord": userData[indexUser[i]], "correctWord": groundTruth[indexGround[i]], "correctIndex": indexGround[i]}
         if len(keywordUser) != len(keywordGround):
             print("Miss or More keywords")
             return {"status": "MOMK"}
