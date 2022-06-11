@@ -2,6 +2,7 @@ import re
 import urllib.request
 import urllib.parse
 import json
+import numpy as np
 
 import paralleldots
 
@@ -31,44 +32,52 @@ def diff(a: str, b: str):
     return a != b
 
 
-def get_edit_dist(x: list, y: list):
+def get_min_edit_dist(x: list, y: list):
+    x.insert(0, "")
+    y.insert(0, "")
+    shortened_penalty = 0.6
     gap_penalty = 0.7
     mismatch_penalty = 1
     m = len(x)
     n = len(y)
-    E = []
 
-    for i in range(0, m + 1):
-        E.append([])
-        for j in range(0, n + 1):
-            E[i].append(0)
+    E = np.arange(m * n, dtype='float')
+    E = np.reshape(E, (m, n))
 
-    for i in range(0, m + 1):
-        E[i][0] = i * gap_penalty
-    for j in range(1, n + 1):
-        E[0][j] = j * gap_penalty
+    res = 1e9
+    min_i = min_j = -1
+    min_k = min_l = -1
 
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            E[i][j] = min(gap_penalty + E[i-1][j], gap_penalty + E[i][j-1],
-                          diff(x[i - 1], y[j - 1]) * mismatch_penalty + E[i-1][j-1])
+    for i in range(1, m):
+        for j in range(1, n):
+            for a in range(i - 1, m):
+                E[a][j - 1] = (a - (i - 1)) * gap_penalty
+            for a in range(j, n):
+                E[i - 1][a] = (a - (j - 1)) * gap_penalty
+            for k in range(i, m):
+                for l in range(j, n):
+                    E[k][l] = min(gap_penalty + E[k - 1][l], gap_penalty + E[k][l - 1],
+                                  diff(x[k], y[l]) * mismatch_penalty + E[k - 1][l - 1])
+                    dist = E[k][l] + shortened_penalty * (n - 1 - (l - j + 1))
+                    if res > dist:
+                        res = dist
+                        min_i = i
+                        min_j = j
+                        min_k = k
+                        min_l = l
 
-    return E[m][n]
+    return res, min_i, min_k, x[min_i:min_k + 1], min_j, min_l, y[min_j:min_l + 1]
+
 
 
 def get_alignment(long_text: str, short_text: str):
+    long_text = long_text.lower()
+    short_text = short_text.lower()
+
     x_wordlevel = long_text.split(" ")
     y_wordlevel = short_text.split(" ")
-    res = 1e9
-    min_i = min_j = -1
-    for i in range(0, len(x_wordlevel)):
-        for j in range(i + 1, len(x_wordlevel)):
-            cur = get_edit_dist(x_wordlevel[i:j], y_wordlevel)
-            if res > cur:
-                res = cur
-                min_i = i
-                min_j = j
-    return res, min_i, min_j, len(x_wordlevel), x_wordlevel[min_i:min_j]
+
+    return get_min_edit_dist(x_wordlevel, y_wordlevel), len(x_wordlevel)
 
 
 def get_wordnet_pos(treebank_tag):
@@ -164,9 +173,11 @@ class StringCheck(Resource):
         ud = lemmatize_sentence(ud)
         ud = str(' '.join([str(s) for s in ud]))
 
-        res, min_i, min_j, num_wordlevel, longLine = get_alignment(string4, ud)
+        res, min_i, min_j, longLine, min_u, min_v, y_wordlevel, num_wordlevel = get_alignment(string4, ud)
+
 
         st = str(' '.join([str(s) for s in longLine]))
+        ud = str(' '.join([str(s) for s in y_wordlevel]))
 
         stop_words = set(stopwords.words('english'))
         word_tokens = word_tokenize(ud)
