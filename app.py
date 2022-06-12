@@ -107,9 +107,7 @@ def lemmatize_sentence(sentence):
 
 
 class GrammarCheck(Resource):
-    def get(self):
-#       data = request.form['data']
-        data = request.headers.get("data")
+    def grammarCkeck(self, data):
         http = urllib3.PoolManager()
         r = http.request('POST', 'http://bark.phon.ioc.ee/punctuator', fields={'text': data})
         print(r.data)
@@ -152,30 +150,35 @@ class GrammarCheck(Resource):
                 num_dict[str] = 1 + num_dict[str]
             else:
                 num_dict[str] = 1
-#         for i in range(len(matches)):
-#             if matches[i]["shortMessage"] == 'Missing comma':
-#                 continue
-#             if matches[i]["shortMessage"] != '':
-#                 print(matches[i])
-#                 str = matches[i]["shortMessage"]
-#                 error_dict = {}
-#                 error_dict["errorSentence"] = matches[i]["sentence"]
-#                 error_dict["errorType"] = str
-#                 error_dict["errorAdvice"] = matches[i]["message"]
-#                 error_dict["errorOffset"] = matches[i]["offset"]
-#                 error_dict["errorLength"] = matches[i]["length"]
-#                 error_dict["errorReplacement"] = matches[i]["replacements"]
+        #         for i in range(len(matches)):
+        #             if matches[i]["shortMessage"] == 'Missing comma':
+        #                 continue
+        #             if matches[i]["shortMessage"] != '':
+        #                 print(matches[i])
+        #                 str = matches[i]["shortMessage"]
+        #                 error_dict = {}
+        #                 error_dict["errorSentence"] = matches[i]["sentence"]
+        #                 error_dict["errorType"] = str
+        #                 error_dict["errorAdvice"] = matches[i]["message"]
+        #                 error_dict["errorOffset"] = matches[i]["offset"]
+        #                 error_dict["errorLength"] = matches[i]["length"]
+        #                 error_dict["errorReplacement"] = matches[i]["replacements"]
 
-#                 error_list.append(error_dict)
-#                 if str in num_dict:
-#                     num_dict[str] = 1 + num_dict[str]
-#                 else:
-#                     num_dict[str] = 1
+        #                 error_list.append(error_dict)
+        #                 if str in num_dict:
+        #                     num_dict[str] = 1 + num_dict[str]
+        #                 else:
+        #                     num_dict[str] = 1
         # return {"most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
         if not bool(num_dict):
             return {"correct": True}
         else:
-            return {"correct": False, "most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0], "error": error_list[:]}
+            return {"correct": False, "most": sorted(num_dict.items(), key=lambda x: x[1], reverse=True)[0],
+                    "error": error_list[:]}
+    def get(self):
+#       data = request.form['data']
+        data = request.headers.get("data")
+        return self.grammarCkeck(data)
 
 
 class StringCheck(Resource):
@@ -316,7 +319,7 @@ class ScoreCheck(Resource):
             LengthScore = 60
 
         # Calculate Grammar Score
-        grammarResult = get("https://grammarbot.azurewebsites.net/grammarCheck", headers={"data": userData}).json()
+        grammarResult = GrammarCheck.grammarCkeck(GrammarCheck(), userData)
         ErrorList = grammarResult["error"]
         ErrorCnt = len(ErrorList)
         GrammarScore = 60
