@@ -128,6 +128,8 @@ class GrammarCheck(Resource):
         error_list = []
         matches = json.loads(html)['matches']
         for i in range(len(matches)):
+            if matches[i]["shortMessage"] == 'Missing comma':
+                continue
             str = ""
             if matches[i]["shortMessage"] != '':
                 str = matches[i]["shortMessage"]
