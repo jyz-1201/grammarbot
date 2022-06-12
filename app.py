@@ -79,7 +79,9 @@ def get_alignment(long_text: str, short_text: str):
     x_wordlevel = long_text.split(" ")
     y_wordlevel = short_text.split(" ")
 
-    return get_min_edit_dist(x_wordlevel, y_wordlevel), len(x_wordlevel)
+    res = get_min_edit_dist(x_wordlevel, y_wordlevel)
+    res += (len(x_wordlevel), )
+    return res
 
 
 def get_wordnet_pos(treebank_tag):
@@ -314,7 +316,7 @@ class ScoreCheck(Resource):
             LengthScore = 60
 
         # Calculate Grammar Score
-        grammarResult = get("http://localhost:5000/grammarCheck", headers={"data": userData}).json()
+        grammarResult = get("https://grammarbot.azurewebsites.net/grammarCheck", headers={"data": userData}).json()
         ErrorList = grammarResult["error"]
         ErrorCnt = len(ErrorList)
         GrammarScore = 60
