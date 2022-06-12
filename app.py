@@ -299,18 +299,18 @@ class ScoreCheck(Resource):
         # Calculate Semantic Score
         paralleldots.set_api_key("WHdM81fnBed9S6mbvKrBcvgG2CxBPCnhychHXIRgbvE")
         response = paralleldots.similarity(userData, groundTruth)
-        SemanticScore = response['similarity_score'] * 100
+        SemanticScore = response['similarity_score'] * 100 * 0.91
 
         # Calculate Length Score
         Length = len(userData.split(" "))
         LengthScore = 100
-        if Length <= 140:
+        if Length <= 135:
             LengthScore = 90
-        if Length <= 105:
+        if Length <= 110:
             LengthScore = 80
-        if Length <= 75:
+        if Length <= 85:
             LengthScore = 70
-        if Length <= 55:
+        if Length <= 70:
             LengthScore = 60
 
         # Calculate Grammar Score
@@ -318,13 +318,13 @@ class ScoreCheck(Resource):
         ErrorList = grammarResult["error"]
         ErrorCnt = len(ErrorList)
         GrammarScore = 60
-        if ErrorCnt <= 10:
+        if ErrorCnt <= 7:
             GrammarScore = 70
-        if ErrorCnt <= 8:
+        if ErrorCnt <= 4:
             GrammarScore = 80
-        if ErrorCnt <= 5:
+        if ErrorCnt <= 2:
             GrammarScore = 90
-        if ErrorCnt <= 3:
+        if ErrorCnt <= 1:
             GrammarScore = 100
 
         AverageScore = (SemanticScore + LengthScore + GrammarScore) / 3
