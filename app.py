@@ -18,6 +18,7 @@ from nltk import word_tokenize, pos_tag
 
 
 from nltk.stem.wordnet import WordNetLemmatizer
+from requests import get
 
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -277,11 +278,66 @@ class KeywordCheck(Resource):
         print({"status": "C"})
         return {"status": "C"}
 
+class ScoreCheck(Resource):
+    def toGrade(self, score):
+        if score <= 60:
+            return "E"
+        if score <= 70:
+            return "D"
+        if score <= 80:
+            return "C"
+        if score <= 90:
+            return "B"
+        return "A"
+
+    def get(self):
+        userData = request.headers.get("userData")
+        groundTruth = request.headers.get("groundTruth")
+
+        # Calculate Semantic Score
+        paralleldots.set_api_key("WHdM81fnBed9S6mbvKrBcvgG2CxBPCnhychHXIRgbvE")
+        response = paralleldots.similarity(userData, groundTruth)
+        SemanticScore = response['similarity_score'] * 100
+
+        # Calculate Length Score
+        Length = len(userData.split(" "))
+        LengthScore = 100
+        if Length <= 140:
+            LengthScore = 90
+        if Length <= 105:
+            LengthScore = 80
+        if Length <= 75:
+            LengthScore = 70
+        if Length <= 55:
+            LengthScore = 60
+
+        # Calculate Grammar Score
+        grammarResult = get("http://localhost:5000/grammarCheck", headers={"data": userData}).json()
+        ErrorList = grammarResult["error"]
+        ErrorCnt = len(ErrorList)
+        GrammarScore = 60
+        if ErrorCnt <= 10:
+            GrammarScore = 70
+        if ErrorCnt <= 8:
+            GrammarScore = 80
+        if ErrorCnt <= 5:
+            GrammarScore = 90
+        if ErrorCnt <= 3:
+            GrammarScore = 100
+
+        AverageScore = (SemanticScore + LengthScore + GrammarScore) / 3
+        return {"AverageScore": self.toGrade(AverageScore),
+                "SemanticScore": self.toGrade(SemanticScore),
+                "LengthScore": self.toGrade(LengthScore),
+                "GrammarScore": self.toGrade(GrammarScore),
+                }
+
 
 api.add_resource(GrammarCheck, '/grammarCheck')
 api.add_resource(StringCheck, '/stringCheck')
 api.add_resource(MeaningCheck, '/meaningCheck')
 api.add_resource(KeywordCheck, '/keywordCheck')
+api.add_resource(ScoreCheck, '/scoreCheck')
 
 
 if __name__ == "__main__":
