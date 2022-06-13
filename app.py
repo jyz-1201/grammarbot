@@ -302,6 +302,8 @@ class ScoreCheck(Resource):
         userData = request.headers.get("userData")
         groundTruth = request.headers.get("groundTruth")
 
+        print(userData)
+        print(groundTruth)
         # Calculate Semantic Score
         paralleldots.set_api_key("WHdM81fnBed9S6mbvKrBcvgG2CxBPCnhychHXIRgbvE")
         response = paralleldots.similarity(userData, groundTruth)
