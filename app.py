@@ -183,6 +183,7 @@ class GrammarCheck(Resource):
 
 class StringCheck(Resource):
     def get(self):
+        return {"status": "F"}
         userData = request.headers.get("userData")
         groundTruth = request.headers.get("groundTruth")
 
@@ -235,7 +236,7 @@ class StringCheck(Resource):
             return {"status": "MOMK"}
         print(min_j)
         print(num_wordlevel)
-        if min_j >= num_wordlevel - 2:
+        if min_j >= num_wordlevel - 3:
             print("Almost finish reading")
             return {"status": "F"}
         print("Correct")
