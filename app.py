@@ -281,8 +281,8 @@ class KeywordCheck(Resource):
         for i in range(len(keywordGround)):
             print(keywordGround)
             if keywordGround[i] not in keywordUser:
-                print({"status": "MK", "missing keyword": keywordGround[i]})
-                return {"status": "MK", "missing keyword": keywordGround[i]}
+                print({"status": "MK", "missingKeyword": keywordGround[i]})
+                return {"status": "MK", "missingKeyword": keywordGround[i]}
         print({"status": "C"})
         return {"status": "C"}
 
