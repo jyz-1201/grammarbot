@@ -1,3 +1,4 @@
+import random
 import re
 import urllib.request
 import urllib.parse
@@ -302,38 +303,40 @@ class ScoreCheck(Resource):
         userData = request.headers.get("userData")
         groundTruth = request.headers.get("groundTruth")
 
+        print("RECEIVED userData:")
         print(userData)
+        print("RECEIVED groundTruth:")
         print(groundTruth)
         # Calculate Semantic Score
-        paralleldots.set_api_key("WHdM81fnBed9S6mbvKrBcvgG2CxBPCnhychHXIRgbvE")
-        response = paralleldots.similarity(userData, groundTruth)
-        SemanticScore = response['similarity_score'] * 100 * 0.91
-
+        # paralleldots.set_api_key("WHdM81fnBed9S6mbvKrBcvgG2CxBPCnhychHXIRgbvE")
+        # response = paralleldots.similarity(userData, groundTruth)
+        # SemanticScore = response['similarity_score'] * 100 * 0.91
+        SemanticScore = random.randint(70, 90)
         # Calculate Length Score
-        Length = len(userData.split(" "))
-        LengthScore = 100
-        if Length <= 135:
-            LengthScore = 90
-        if Length <= 110:
-            LengthScore = 80
-        if Length <= 85:
-            LengthScore = 70
-        if Length <= 70:
-            LengthScore = 60
+        # Length = len(userData.split(" "))
+        LengthScore = random.randint(70, 90)
+        # if Length <= 135:
+        #     LengthScore = 90
+        # if Length <= 110:
+        #     LengthScore = 80
+        # if Length <= 85:
+        #     LengthScore = 70
+        # if Length <= 70:
+        #     LengthScore = 60
 
         # Calculate Grammar Score
-        grammarResult = GrammarCheck.grammarCkeck(GrammarCheck(), userData)
-        ErrorList = grammarResult["error"]
-        ErrorCnt = len(ErrorList)
-        GrammarScore = 60
-        if ErrorCnt <= 7:
-            GrammarScore = 70
-        if ErrorCnt <= 4:
-            GrammarScore = 80
-        if ErrorCnt <= 2:
-            GrammarScore = 90
-        if ErrorCnt <= 1:
-            GrammarScore = 100
+        # grammarResult = GrammarCheck.grammarCkeck(GrammarCheck(), userData)
+        # ErrorList = grammarResult["error"]
+        # ErrorCnt = len(ErrorList)
+        GrammarScore = random.randint(70, 90)
+        # if ErrorCnt <= 7:
+        #     GrammarScore = 70
+        # if ErrorCnt <= 4:
+        #     GrammarScore = 80
+        # if ErrorCnt <= 2:
+        #     GrammarScore = 90
+        # if ErrorCnt <= 1:
+        #     GrammarScore = 100
 
         AverageScore = (SemanticScore + LengthScore + GrammarScore) / 3
         return {"AverageScore": self.toGrade(AverageScore),
