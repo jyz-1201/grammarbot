@@ -131,6 +131,8 @@ class GrammarCheck(Resource):
         for i in range(len(matches)):
             if matches[i]["shortMessage"] == 'Missing comma':
                 continue
+            if matches[i]["rule"]["id"] == 'I_LOWERCASE':
+                continue
             str = ""
             if matches[i]["shortMessage"] != '':
                 str = matches[i]["shortMessage"]
