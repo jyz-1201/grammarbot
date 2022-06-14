@@ -186,7 +186,7 @@ class GrammarCheck(Resource):
 
 class StringCheck(Resource):
     def get(self):
-        return {"status": "F"}
+#         return {"status": "F"}
         userData = request.headers.get("userData")
         groundTruth = request.headers.get("groundTruth")
 
